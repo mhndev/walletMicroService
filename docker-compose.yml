@@ -1,0 +1,57 @@
+version: "3.8"
+services:
+  wallet_app:
+    image: laravel-www
+    container_name: laravel-www
+    build:
+      context: .
+      args:
+        UID: ${UID}
+        GID: ${GID}
+      dockerfile: docker/Dockerfile
+
+    depends_on:
+      - wallet_mysql
+    ports:
+      - 8844:80
+    volumes:
+      - .:/var/www/html
+    env_file:
+      - .env
+    environment:
+      APP_ENV: local
+      CONTAINER_ROLE: app
+
+  wallet_scheduler:
+    image: laravel-www
+    container_name: laravel-scheduler
+    depends_on:
+      - wallet_app
+    volumes:
+      - .:/var/www/html
+    env_file:
+      - .env
+    environment:
+      APP_ENV: local
+      CONTAINER_ROLE: scheduler
+
+  wallet_mysql:
+    container_name: laravel-mysql
+    image: mysql:5.7.33
+    volumes:
+      - wallet-mysql-vol:/var/lib/mysql
+    env_file:
+      - .env
+
+  wallet_phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.1.0
+    depends_on:
+      - wallet_mysql
+    ports:
+      - "8020:80"
+    environment:
+      PMA_HOST: wallet_mysql
+
+volumes:
+  wallet-mysql-vol:
+    driver: "local"
